@@ -1,3 +1,1 @@
-export * from "./jsxFactory";
-
-
+export * from "./copy-assets";
