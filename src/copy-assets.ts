@@ -1,77 +1,61 @@
-import { join, relative } from "path";
-import { type BunPlugin } from "bun";
-import { promises as fs } from "fs";
-import { styleText as sty } from "util";
-import { logger } from "@gotpop-platform/package-logger";
+import { join, relative } from "path"
+import { type BunPlugin } from "bun"
+import { promises as fs } from "fs"
+import { logger } from "@gotpop-platform/package-logger"
 
-// Function to copy files and directories recursively
 async function copyFiles(source: string, destination: string) {
-  const sourcePath = join(process.cwd(), source);
-  const destinationPath = join(process.cwd(), destination);
-  const relativePath = relative(process.cwd(), sourcePath);
+  const sourcePath = join(process.cwd(), source)
+  const destinationPath = join(process.cwd(), destination)
+  const relativePath = relative(process.cwd(), sourcePath)
 
   logger(
-    {
-      msg: "Copying from",
-      styles: ["italic"],
-    },
+    { msg: "Copying from", styles: ["italic"] },
     { msg: relativePath, styles: ["bold", "red"] },
     { msg: "to", styles: ["dim"] },
-    {
-      msg: destination,
-      styles: ["bold", "green"],
-    }
-  );
+    { msg: destination, styles: ["bold", "green"] }
+  )
 
-  // logger({
-  //   msg: "Copying assets...",
-  //   styles: ["bold", "bgYellowBright"],
-  // });
+  await fs.mkdir(destinationPath, { recursive: true })
 
-  await fs.mkdir(destinationPath, { recursive: true });
-  const entries = await fs.readdir(sourcePath, { withFileTypes: true });
+  const entries = await fs.readdir(sourcePath, { withFileTypes: true })
 
   for (const entry of entries) {
-    const sourceEntryPath = join(sourcePath, entry.name);
-    const destinationEntryPath = join(destinationPath, entry.name);
-    const relativeSourcePath = relative(process.cwd(), sourceEntryPath);
+    const sourceEntryPath = join(sourcePath, entry.name)
+    const destinationEntryPath = join(destinationPath, entry.name)
+    const relativeSourcePath = relative(process.cwd(), sourceEntryPath)
 
     if (entry.isDirectory()) {
-      // console.log(`Entering directory: ${relativeSourcePath}\n`);
-      await copyFiles(relativeSourcePath, join(destination, entry.name));
+      await copyFiles(relativeSourcePath, join(destination, entry.name))
     } else {
-      await fs.copyFile(sourceEntryPath, destinationEntryPath);
-      // console.log(`Copied file: ${relativeSourcePath}`);
+      await fs.copyFile(sourceEntryPath, destinationEntryPath)
     }
   }
 }
 
 interface CopyFilesPluginOptions {
   // Source and destination configuration
-  inputDir?: string;
-  outputDir?: string;
-  directories: string[];
+  inputDir?: string
+  outputDir?: string
+  directories: string[]
 
   // File handling options
-  patterns?: string[];
-  exclude?: string[];
+  patterns?: string[]
+  exclude?: string[]
 
   // Processing options
-  preserveStructure?: boolean;
-  flatten?: boolean;
+  preserveStructure?: boolean
+  flatten?: boolean
 
   // Hooks
-  onFile?: (source: string, dest: string) => Promise<void>;
-  onDir?: (source: string, dest: string) => Promise<void>;
+  onFile?: (source: string, dest: string) => Promise<void>
+  onDir?: (source: string, dest: string) => Promise<void>
 
   // Logging options
-  verbose?: boolean;
-  silent?: boolean;
+  verbose?: boolean
+  silent?: boolean
 }
 
-export const createCopyFilesPlugin = (
-  options: CopyFilesPluginOptions
-): BunPlugin => ({
+export const createCopyFilesPlugin = (options: CopyFilesPluginOptions): BunPlugin => ({
   name: "copy-assets",
   async setup(build) {
     const {
@@ -86,35 +70,29 @@ export const createCopyFilesPlugin = (
       onDir,
       verbose = false,
       silent = false,
-    } = options;
+    } = options
 
-    if (!silent)
-      logger({ msg: "Copying assets...", styles: ["bold", "bgYellowBright"] });
+    if (!silent) logger({ msg: "Copying assets...", styles: ["bold", "bgYellowBright"] })
 
     try {
       for (const directory of directories) {
         const destination = join(
           outputDir,
           preserveStructure ? directory.replace(inputDir, "") : ""
-        );
+        )
 
-        // Call custom directory hook if provided
-        if (onDir) await onDir(directory, destination);
+        if (onDir) await onDir(directory, destination)
 
-        await copyFiles("/" + inputDir + "/" + directory, "/" + destination);
-
-        // if (verbose) {
-        //   console.log(`Processed directory: ${directory}`);
-        // }
+        await copyFiles("/" + inputDir + "/" + directory, "/" + destination)
       }
 
       if (!silent)
         logger({
           msg: "Finished copying assets",
           styles: ["bold", "bgGreenBright"],
-        });
+        })
     } catch (error) {
-      logger({ msg: String(error), styles: ["bold", "red"] });
+      logger({ msg: String(error), styles: ["bold", "red"] })
     }
   },
-});
+})
