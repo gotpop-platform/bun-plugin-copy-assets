@@ -10,10 +10,23 @@ async function copyFiles(source: string, destination: string) {
   const destinationPath = join(process.cwd(), destination);
   const relativePath = relative(process.cwd(), sourcePath);
 
-  console.log(
-    sty("italic", "Copying from ") +
-      `${sty("red", relativePath)} to ${sty("green", destination)}\n`
+  logger(
+    {
+      msg: "Copying from",
+      styles: ["italic"],
+    },
+    { msg: relativePath, styles: ["bold", "red"] },
+    { msg: "to", styles: ["dim"] },
+    {
+      msg: destination,
+      styles: ["bold", "green"],
+    }
   );
+
+  // logger({
+  //   msg: "Copying assets...",
+  //   styles: ["bold", "bgYellowBright"],
+  // });
 
   await fs.mkdir(destinationPath, { recursive: true });
   const entries = await fs.readdir(sourcePath, { withFileTypes: true });
@@ -24,11 +37,11 @@ async function copyFiles(source: string, destination: string) {
     const relativeSourcePath = relative(process.cwd(), sourceEntryPath);
 
     if (entry.isDirectory()) {
-      console.log(`Entering directory: ${relativeSourcePath}\n`);
+      // console.log(`Entering directory: ${relativeSourcePath}\n`);
       await copyFiles(relativeSourcePath, join(destination, entry.name));
     } else {
       await fs.copyFile(sourceEntryPath, destinationEntryPath);
-      console.log(`Copied file: ${relativeSourcePath}\n`);
+      // console.log(`Copied file: ${relativeSourcePath}`);
     }
   }
 }
@@ -90,9 +103,9 @@ export const createCopyFilesPlugin = (
 
         await copyFiles("/" + inputDir + "/" + directory, "/" + destination);
 
-        if (verbose) {
-          console.log(`Processed directory: ${directory}`);
-        }
+        // if (verbose) {
+        //   console.log(`Processed directory: ${directory}`);
+        // }
       }
 
       if (!silent)
