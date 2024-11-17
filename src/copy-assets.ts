@@ -3,17 +3,27 @@ import { type BunPlugin } from "bun"
 import { promises as fs } from "fs"
 import { logger } from "@gotpop-platform/package-logger"
 
-async function copyFiles(source: string, destination: string) {
+async function copyFiles({
+  source,
+  destination,
+  silent = false,
+}: {
+  source: string
+  destination: string
+  silent: boolean
+}) {
   const sourcePath = join(process.cwd(), source)
   const destinationPath = join(process.cwd(), destination)
   const relativePath = relative(process.cwd(), sourcePath)
 
-  logger(
-    { msg: "Copying from", styles: ["italic"] },
-    { msg: relativePath, styles: ["bold", "red"] },
-    { msg: "to", styles: ["dim"] },
-    { msg: destination, styles: ["bold", "green"] }
-  )
+  if (!silent) {
+    logger(
+      { msg: "Copying from", styles: ["italic"] },
+      { msg: relativePath, styles: ["bold", "red"] },
+      { msg: "to", styles: ["dim"] },
+      { msg: destination, styles: ["bold", "green"] }
+    )
+  }
 
   await fs.mkdir(destinationPath, { recursive: true })
 
@@ -25,14 +35,18 @@ async function copyFiles(source: string, destination: string) {
     const relativeSourcePath = relative(process.cwd(), sourceEntryPath)
 
     if (entry.isDirectory()) {
-      await copyFiles(relativeSourcePath, join(destination, entry.name))
+      await copyFiles({
+        source: relativeSourcePath,
+        destination: destinationEntryPath,
+        silent,
+      })
     } else {
       await fs.copyFile(sourceEntryPath, destinationEntryPath)
     }
   }
 }
 
-interface CopyFilesPluginOptions {
+export interface CopyFilesPluginOptions {
   // Source and destination configuration
   inputDir?: string
   outputDir?: string
@@ -83,7 +97,11 @@ export const createCopyFilesPlugin = (options: CopyFilesPluginOptions): BunPlugi
 
         if (onDir) await onDir(directory, destination)
 
-        await copyFiles("/" + inputDir + "/" + directory, "/" + destination)
+        await copyFiles({
+          source: "/" + inputDir + "/" + directory,
+          destination: "/" + destination,
+          silent,
+        })
       }
 
       if (!silent)
