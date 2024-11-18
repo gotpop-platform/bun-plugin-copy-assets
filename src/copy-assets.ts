@@ -13,8 +13,9 @@ async function copyFiles({
   silent: boolean
 }) {
   const sourcePath = join(process.cwd(), source)
-  const destinationPath = join(process.cwd(), destination)
+  const destinationPath = destination
   const relativePath = relative(process.cwd(), sourcePath)
+  console.log("relativePath :", relativePath)
 
   if (!silent) {
     logger(
