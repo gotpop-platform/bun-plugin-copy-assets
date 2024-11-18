@@ -1,6 +1,6 @@
 {
   "name": "@gotpop-platform/bun-plugin-copy-assets",
-  "version": "1.0.06",
+  "version": "1.0.07",
   "description": "A Bun plugin for copying assets",
   "main": "src/index.ts",
   "scripts": {
